@@ -1,0 +1,6 @@
+# nodejs application 
+node_modules/
+npm-debug.log
+.DS_Store
+.env
+sleepData.json
