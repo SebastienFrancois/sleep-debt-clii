@@ -36,6 +36,12 @@ function calculateIdealSleep(age){
     return 7;                 // Seniors
 }
 
+// Custom validation function for inquirer prompt to check if the input is a valid float number
+function validateFloat(input) {
+    const hours = parseFloat(input);
+    return !isNaN(hours) && hours > 0 && hours < 24;
+}
+
 // Main CLI logic
 async function main() {
     process.on('uncaughtException', (error) => {
@@ -56,13 +62,17 @@ async function main() {
             { name: 'age', message: 'How old are you?', type: 'number' },
             {
                 name: 'avgSleep',
-                message: 'How many hours do you usually sleep per night?',
-                type: 'number',
+                message: 'How many hours do you usually sleep per night? (e.g., 8, 6.5)',   
+                type: 'input',
+                validate: validateFloat,
             },
             {
                 name: 'wakeUpTime',
                 message: 'What time do you want to wake up (e.g., 07:00)?',
                 type: 'input',
+                validate: (input) => {
+                    return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(input);
+                }
             },
         ]);
 
@@ -75,11 +85,39 @@ async function main() {
         console.log(chalk.green('Welcome back, ' + data.profile.name + '!'));
     }
 
+    // Check if user has any sleep debt already and ask if he did any naps to reduce it ? Check last entry
+    let prevSleepDebt  = data.history.length > 0 ? data.history[data.history.length - 1].sleepDebt : 0;
+
+    if (prevSleepDebt > 0) {
+        await inquirer.prompt([
+            {
+                name: 'hasNapped',
+                message:   `You have a sleep debt of ${prevSleepDebt.toFixed(
+                    2
+                )} hours. Did you take any naps to reduce it?`,
+                type: "confirm",
+            },
+        ]).then(async ({ hasNapped }) => {
+            if (hasNapped) {
+                const { napHours } = await inquirer.prompt([
+                    {
+                        name: 'napHours',
+                        message: 'How many hours did you nap? (e.g., 1, 0.5)',
+                        type: 'input',
+                        validate: validateFloat,
+                    },
+                ]);
+                prevSleepDebt = prevSleepDebt - parseFloat(napHours);
+                console.log(chalk.green('Nap added successfully!'));
+            }});
+    }
+
     const { sleepHours, interruptions } = await inquirer.prompt([
         {
             name: 'sleepHours',
-            message: 'How many hours did you sleep last night?',
-            type: 'number',
+            message: 'How many hours did you sleep last night? (e.g., 8, 6.5)',
+            type: 'input',
+            validate: validateFloat,
         },
         {
             name: 'interruptions',
@@ -95,8 +133,13 @@ async function main() {
     .map(Number)
     .reduce((a, b) => a + b, 0) / 60; // Convert to hours
 
-    const totalSleep = sleepHours - interruptionTime;
-    const sleepDebt = data.profile.idealSleep - totalSleep;
+    
+
+    const totalSleep =  parseFloat(sleepHours) - interruptionTime;
+    let sleepDebt = (data.profile.idealSleep - totalSleep);
+
+    if(prevSleepDebt > 0) sleepDebt = sleepDebt + prevSleepDebt;
+        
 
     data.history.push({
         date: new Date().toISOString().split('T')[0],
