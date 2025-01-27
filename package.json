@@ -1,0 +1,20 @@
+{
+  "name": "sleep-debt-cli",
+  "version": "1.0.0",
+  "description": "A CLI program to calculate sleep debt.",
+  "main": "sleep-deb-cli.mjs",
+  "bin": {
+    "sleep-debt": "./sleep-debt-cli.mjs"
+  },
+  "scripts": {
+    "start": "node sleep-debt-cli.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "inquirer": "^12.3.2"
+  },
+  "type": "module"
+}
