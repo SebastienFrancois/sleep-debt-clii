@@ -3,7 +3,7 @@
 
 On Unix-based systems (Linux/macOS), you need to set the script file as executable:
 `
-chmod +x sleep-debt-cli.js
+chmod +x sleep-debt-cli.mjs
 `
 
 # Install the CLI globally 
